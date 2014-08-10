@@ -230,27 +230,38 @@ def crawl_one(uid, weibo_user_type=1001):
 
     info = get_info(uid, weibo_user_type)
 
-    user, create = storage.WeiboUser.objects.get_or_create(uid=uid)
     if info:
-        user.info = info
         event_logger.info("Information fetching succeed - uid: %s" % uid)
     else:
         event_logger.critical("Infromation fetching fail - uid: %s" % uid)
         return 
-    user.followees = get_follows(uid, info.n_followees, 1)
-    event_logger.info("Followees fetched - uid:%s - target amount: %d - realized amount: %d" % (uid, info.n_followees, len(user.followees)))
-    user.followers = get_follows(uid, info.n_followers, 2)
-    event_logger.info("Followers fetched - uid: %s - target amount: %d - realized amount: %d" % (uid, info.n_followers, len(user.followers)))
+    followees = get_follows(uid, info.n_followees, 1)
+    event_logger.info("Followees fetched - uid:%s - target amount: %d - realized amount: %d" % (uid, info.n_followees, len(followees)))
+    followers = get_follows(uid, info.n_followers, 2)
+    event_logger.info("Followers fetched - uid: %s - target amount: %d - realized amount: %d" % (uid, info.n_followers, len(followers)))
+
+    total_mblogs = get_mblogs(uid, info.n_mblogs, info.domain, weibo_user_type)
+
+    user, create = storage.WeiboUser.objects.get_or_create(uid=uid)
+    user.info = info
+    user.followees = followees
+    user.followers = followers
 
     try:
         user.save()
     except Exception, e:
         event_logger.error("Mongo Error")
 
-    total_mblogs = get_mblogs(uid, info.n_mblogs, info.domain, weibo_user_type)
     event_logger.info("MicroBlogs fetched - uid: %s - target amount: %d - realized amount: %d)" % (uid, info.n_mblogs, total_mblogs))
     event_logger.info("Finish uid: %s" % uid)
     
+def add_crawl(uid):
+    event_logger.info("add crawl start uid: %s" % uid)
+
+
+
+
+
 
 def test_info():
     #info = get_info('1618051664', 1002)
@@ -272,7 +283,7 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    crawl_one("1198367585")
+    crawl_one("1863993534")
 
 if __name__ == '__main__':
     test()

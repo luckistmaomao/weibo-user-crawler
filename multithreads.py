@@ -25,10 +25,6 @@ class Threadpool(threading.Thread):
         for thread in self.workers:
             thread.start()
             
-    def run(self):
-        while True:
-            sleep(60)
-
 
 class WorkerThread(threading.Thread):
     '''

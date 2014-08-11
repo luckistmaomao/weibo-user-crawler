@@ -9,7 +9,7 @@ from time import ctime,sleep
 import threading
 from task import crawl_one
 
-class Threadpool(threading.Thread):
+class Threadpool(object):
     def __init__(self,max_workers,func,user_list = []):
         self.max_workers = max_workers
         self.user_queue = Queue()
@@ -44,7 +44,8 @@ class WorkerThread(threading.Thread):
                 pass
                 continue
 
-            args = [uid,]
+            args = []
+            args.append(uid)
             print '-starting', self.name, 'at:', ctime()
             apply(self.func,args )
             print self.name, 'finished at:', ctime()

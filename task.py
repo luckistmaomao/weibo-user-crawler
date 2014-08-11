@@ -238,17 +238,17 @@ def crawl_one(uid, weibo_user_type=1001):
     else:
         event_logger.critical("Infromation fetching fail - uid: %s" % uid)
         return 
-    #followees = get_follows(uid, info.n_followees, 1)
-    #event_logger.info("Followees fetched - uid:%s - target amount: %d - realized amount: %d" % (uid, info.n_followees, len(followees)))
-    #followers = get_follows(uid, info.n_followers, 2)
-    #event_logger.info("Followers fetched - uid: %s - target amount: %d - realized amount: %d" % (uid, info.n_followers, len(followers)))
+    followees = get_follows(uid, info.n_followees, 1)
+    event_logger.info("Followees fetched - uid:%s - target amount: %d - realized amount: %d" % (uid, info.n_followees, len(followees)))
+    followers = get_follows(uid, info.n_followers, 2)
+    event_logger.info("Followers fetched - uid: %s - target amount: %d - realized amount: %d" % (uid, info.n_followers, len(followers)))
 
     total_mblogs,last_update_time = get_mblogs(uid, info.n_mblogs, info.domain, weibo_user_type)
 
     user, create = storage.WeiboUser.objects.get_or_create(uid=uid)
     user.info = info
-    #user.followees = followees
-    #user.followers = followers
+    user.followees = followees
+    user.followers = followers
     user.last_update_time = last_update_time
 
     try:
@@ -259,9 +259,10 @@ def crawl_one(uid, weibo_user_type=1001):
     event_logger.info("MicroBlogs fetched - uid: %s - target amount: %d - realized amount: %d)" % (uid, info.n_mblogs, total_mblogs))
     event_logger.info("Finish uid: %s" % uid)
     
-def add_crawl(uid,last_update_time,weibo_user_type=1001):
+def add_crawl(uid,weibo_user_type=1001):
     event_logger.info("add crawl start uid: %s" % uid)
     
+    last_update_time = storage.WeiboUser.objects(uid=uid)[0].last_update_time
     info = get_info(uid)
     mblog_count = 0
     n_mblogs = info.n_mblogs
@@ -298,7 +299,7 @@ def add_crawl(uid,last_update_time,weibo_user_type=1001):
                 for mblog in mblogs:
                     if mblog.created_time <= last_update_time:
                         if new_last_update_time > last_update_time:
-                            storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time)
+                            storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time,set__info=info)
                         return
                     if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
                         mblog.save()
@@ -351,7 +352,7 @@ def add_crawl(uid,last_update_time,weibo_user_type=1001):
                             return
                         if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
                             if new_last_update_time > last_update_time:
-                                storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time)
+                                storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time,set__info=info)
                             mblog.save()
                         count_on_this_page += 1
                 log.info("MicroBlogs fetched - uid: %s - page: %d - count: %d" % (uid, page, count_on_this_page))
@@ -398,10 +399,7 @@ def test():
     uid = '3520635535'
 #    time_a = datetime.datetime(1,1,1)
     crawl_one(uid)
-    weibo_user = storage.WeiboUser.objects(uid=uid)[0]
-    last_update_time = weibo_user.last_update_time
-#    print weibo_user.last_update_time
-    add_crawl(uid,last_update_time)
+#    add_crawl(uid)
 
 if __name__ == '__main__':
     test()

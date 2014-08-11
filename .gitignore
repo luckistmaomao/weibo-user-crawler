@@ -1,0 +1,6 @@
+logs/
+analysis/
+*pyc
+*dat*
+*~
+*swp

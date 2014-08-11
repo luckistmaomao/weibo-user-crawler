@@ -1,0 +1,10 @@
+db:
+    dbname: famous
+    host: 114.212.191.119
+    port: 27017
+
+login:
+    - username: 496334161@qq.com
+      password: b091220043
+
+cookie_file: weibo_login_cookies.dat

@@ -21,7 +21,7 @@ import urllib2
 import json
 import os
 from random import randint
-
+import datetime
 MAXTIMES2TRY = 3
 MAXSLEEPINGTIME = 20
 
@@ -126,6 +126,7 @@ def get_mblogs(uid, n_mblogs, domain = None, weibo_user_type=1001):
             n_mblogs = 0
         n_pages = int(n_mblogs / 45) #45 mblogs per page
         page = 1  #begin from first page
+        last_update_time = datetime.datetime(1,1,1)
         while page <= n_pages+1:
             count_on_this_page = 0
             url = ''
@@ -148,6 +149,8 @@ def get_mblogs(uid, n_mblogs, domain = None, weibo_user_type=1001):
                         log.error("Unsuspected page structure! - url: %s" % url)
                     break
             if mblogs is not None and len(mblogs) > 0:
+                if page == 1:
+                    last_update_time = mblogs[0].created_time
                 for mblog in mblogs:
                     if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
                         mblog.save()
@@ -217,8 +220,8 @@ def get_mblogs(uid, n_mblogs, domain = None, weibo_user_type=1001):
             os.remove(COOKIE_FILE)
         except:
             pass
-
-    return mblog_count
+    print last_update_time
+    return mblog_count,last_update_time
 
 def crawl_one(uid, weibo_user_type=1001):
     '''
@@ -235,17 +238,18 @@ def crawl_one(uid, weibo_user_type=1001):
     else:
         event_logger.critical("Infromation fetching fail - uid: %s" % uid)
         return 
-    followees = get_follows(uid, info.n_followees, 1)
-    event_logger.info("Followees fetched - uid:%s - target amount: %d - realized amount: %d" % (uid, info.n_followees, len(followees)))
-    followers = get_follows(uid, info.n_followers, 2)
-    event_logger.info("Followers fetched - uid: %s - target amount: %d - realized amount: %d" % (uid, info.n_followers, len(followers)))
+    #followees = get_follows(uid, info.n_followees, 1)
+    #event_logger.info("Followees fetched - uid:%s - target amount: %d - realized amount: %d" % (uid, info.n_followees, len(followees)))
+    #followers = get_follows(uid, info.n_followers, 2)
+    #event_logger.info("Followers fetched - uid: %s - target amount: %d - realized amount: %d" % (uid, info.n_followers, len(followers)))
 
-    total_mblogs = get_mblogs(uid, info.n_mblogs, info.domain, weibo_user_type)
+    total_mblogs,last_update_time = get_mblogs(uid, info.n_mblogs, info.domain, weibo_user_type)
 
     user, create = storage.WeiboUser.objects.get_or_create(uid=uid)
     user.info = info
-    user.followees = followees
-    user.followers = followers
+    #user.followees = followees
+    #user.followers = followers
+    user.last_update_time = last_update_time
 
     try:
         user.save()
@@ -255,14 +259,122 @@ def crawl_one(uid, weibo_user_type=1001):
     event_logger.info("MicroBlogs fetched - uid: %s - target amount: %d - realized amount: %d)" % (uid, info.n_mblogs, total_mblogs))
     event_logger.info("Finish uid: %s" % uid)
     
-def add_crawl(uid):
+def add_crawl(uid,last_update_time,weibo_user_type=1001):
     event_logger.info("add crawl start uid: %s" % uid)
+    
+    info = get_info(uid)
+    mblog_count = 0
+    n_mblogs = info.n_mblogs
+    if login(USERNAME, PASSWORD, COOKIE_FILE):
+        if n_mblogs is None:
+            n_mblogs = 0
+        n_pages = int(n_mblogs / 45) #45 mblogs per page
+        page = 1  #begin from first page
+        new_last_update_time = datetime.datetime(1,1,1) 
+        while page <= n_pages+1:
+            count_on_this_page = 0
+            url = ''
+            if weibo_user_type == 1001:
+                url = 'http://weibo.com/' + uid + '/weibo?page=' + str(page)
+            elif weibo_user_type == 1002:
+                url = 'http://weibo.com/' + uid + '/mblog?page=' + str(page)
+            mblogs = None
+            for o_o in range(MAXTIMES2TRY):
+                try:
+                    html = urlfetch(url)
+                except URLError:
+                    log.error("URLError! - url: %s" % url)
+                    time.sleep(randint(1, MAXSLEEPINGTIME))
+                    continue
+                else:
+                    try:
+                        mblogs = parse_mblog(html, uid)
+                    except UnsuspectedPageStructError:
+                        log.error("Unsuspected page structure! - url: %s" % url)
+                    break
+            if mblogs is not None and len(mblogs) > 0:
+                if page == 1:
+                    new_last_update_time = mblogs[0].created_time
+                for mblog in mblogs:
+                    if mblog.created_time <= last_update_time:
+                        if new_last_update_time > last_update_time:
+                            storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time)
+                        return
+                    if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
+                        mblog.save()
+                    count_on_this_page += 1
+                #load ajax data
+                params = dict()
+                params['max_id'] = mblogs[-1].mid
+                params['end_id'] = mblogs[0].mid
+                params['page'] = str(page)
+                params['pre_page'] = str(page)
+                params['count'] = str(15)
+                params['feed_type'] = 0
+                params['__rnd'] = str(int(time.time()*1000))
+                params['id'] = domain + uid if domain is not None and uid is not None else None
+                params['pagebar'] = '0'
+                params['domain'] = domain
+                params['script_uri'] = r'/' + uid + r'/weibo'
 
+                url = 'http://weibo.com/p/aj/mblog/mbloglist?' + urllib.urlencode(params)
+                #ajax_resp = urlfetch('http://weibo.com/p/aj/mblog/mbloglist?' + urllib.urlencode(params))
+                ajax_mblogs = None
+                try:
+                    ajax_resp = urlfetch(url)
+                except URLError:
+                    log.error("URLError! - url: %s" % url)
+                else:
+                    try:
+                        ajax_mblogs = parse_json(ajax_resp, uid)
+                    except JsonDataParsingError:
+                        log.error("No json data to be loaded! - url: %s" % url)
+                    except UnsuspectedPageStructError:
+                        log.error("Unsuspected page structure! - url: %s" % url)
+                if ajax_mblogs is not None and len(ajax_mblogs) > 0:
+                    params['max_id'] = ajax_mblogs[-1].mid 
+                    params['__rnd'] = str(int(time.time()*1000))
+                    params['pagebar'] = '1'
 
+                    url = 'http://weibo.com/p/aj/mblog/mbloglist?' + urllib.urlencode(params)
+                    ajax_resp = urlfetch(url)
 
+                    try:
+                        ajax_mblogs += parse_json(ajax_resp, uid)
+                    except JsonDataParsingError:
+                        log.error("No json data to be loaded! - url: %s" % url)
+                    except UnsuspectedPageStructError:
+                        log.error("Unsuspected page structure! - url: %s" % url)
 
-
-
+                    for mblog in ajax_mblogs:
+                        if mblog.created_time <= last_update_time:
+                            return
+                        if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
+                            if new_last_update_time > last_update_time:
+                                storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time)
+                            mblog.save()
+                        count_on_this_page += 1
+                log.info("MicroBlogs fetched - uid: %s - page: %d - count: %d" % (uid, page, count_on_this_page))
+            else:
+                #page fetch fail
+                try:
+                    os.remove(COOKIE_FILE)
+                except:
+                    pass
+                if login(USERNAME, PASSWORD, COOKIE_FILE) == 0:
+                    log.error("Login fail!")
+            page += 1
+            mblog_count += count_on_this_page
+            time.sleep(randint(1, MAXSLEEPINGTIME))
+    else:
+        log.error("Login fail!")
+        try:
+            os.remove(COOKIE_FILE)
+        except:
+            pass
+    if new_last_update_time > last_update_time:
+        storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time)
+    
 def test_info():
     #info = get_info('1618051664', 1002)
     info =  get_info('2834256503')
@@ -283,7 +395,13 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    crawl_one("1863993534")
+    uid = '3520635535'
+#    time_a = datetime.datetime(1,1,1)
+    crawl_one(uid)
+    weibo_user = storage.WeiboUser.objects(uid=uid)[0]
+    last_update_time = weibo_user.last_update_time
+#    print weibo_user.last_update_time
+    add_crawl(uid,last_update_time)
 
 if __name__ == '__main__':
     test()

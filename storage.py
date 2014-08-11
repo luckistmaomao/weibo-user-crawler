@@ -100,7 +100,7 @@ class Follow(EmbeddedDocument):
 
 class WeiboUser(Document):
     uid = StringField(required=True)
-    last_update = DateTimeField()   #lastest update time 
+    last_update_time = DateTimeField()   #lastest update time 
     last_mid = StringField()        #the lastest microblog this user posted 
 
     info = EmbeddedDocumentField(UserInfo)

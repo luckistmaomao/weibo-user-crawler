@@ -1,5 +1,5 @@
 db:
-    dbname: famous
+    dbname: SinaWeiboUser
     host: 114.212.191.119
     port: 27017
 

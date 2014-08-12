@@ -56,8 +56,8 @@ def main():
     wait_crawl_user_list_manager = WaitCrawlUserListManager(wait_pool.user_queue)
     wait_crawl_user_list_manager.start()
     
-    #weibo_user_list_manager = WeiboUserListManager(add_pool.user_queue)
-    #weibo_user_list_manager.start()
+    weibo_user_list_manager = WeiboUserListManager(add_pool.user_queue)
+    weibo_user_list_manager.start()
 
 if __name__ == "__main__":
     main()

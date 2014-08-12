@@ -263,9 +263,12 @@ def add_crawl(uid,weibo_user_type=1001):
     event_logger.info("add crawl start uid: %s" % uid)
     
     last_update_time = storage.WeiboUser.objects(uid=uid)[0].last_update_time
+    if last_update_time is None:
+        last_update_time = datetime.datetime(1,1,1)
     info = get_info(uid)
     mblog_count = 0
     n_mblogs = info.n_mblogs
+    domain = info.domain
     if login(USERNAME, PASSWORD, COOKIE_FILE):
         if n_mblogs is None:
             n_mblogs = 0
@@ -396,10 +399,10 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '3520635535'
+    uid = '2887339314'
 #    time_a = datetime.datetime(1,1,1)
-    crawl_one(uid)
-#    add_crawl(uid)
+#    crawl_one(uid)
+    add_crawl(uid)
 
 if __name__ == '__main__':
     test()

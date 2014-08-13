@@ -91,6 +91,7 @@ class UserInfo(EmbeddedDocument):
     n_mblogs = IntField()
 
     domain = StringField()
+    weibo_user_type = StringField()
 
 
 class Follow(EmbeddedDocument):

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
+modified by @yuzt on 2014.8.13
+
 @author Jiajun Huang
 created on 2013/10/24
 '''
@@ -291,8 +293,8 @@ def add_crawl(uid,weibo_user_type=1001):
             for o_o in range(MAXTIMES2TRY):
                 try:
                     html = urlfetch(url)
-                    with open('data/'+ uid + '.html' ,'w') as f:
-                        f.write(html)
+                    #with open('data/'+ uid + '.html' ,'w') as f:
+                    #    f.write(html)
                 except URLError:
                     log.error("URLError! - url: %s" % url)
                     time.sleep(randint(1, MAXSLEEPINGTIME))
@@ -393,11 +395,16 @@ def add_crawl(uid,weibo_user_type=1001):
     
 def test_info():
     #info = get_info('1618051664', 1002)
-    info =  get_info('2834256503')
-    print info.nickname
-    print info.n_followees
-    print info.n_followers
-    print info.n_mblogs
+    with open("media.txt") as f:
+        for line in f:
+            line = line.strip()
+            uid = line.split(' ')[0]
+            info = get_info(uid)
+            print info.nickname
+            print info.n_mblogs
+            print info.n_followees
+            print info.n_followers
+            print info.weibo_user_type
 
 def test_follow():
     follows = get_follows('1699002082', 81, 2)
@@ -411,12 +418,10 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '1401527553'
-#    time_a = datetime.datetime(1,1,1)
-#    crawl_one(uid)
-    add_crawl(uid)
+    uid = '2682532533'
+    crawl_one(uid)
+#    add_crawl(uid)
 
 if __name__ == '__main__':
-    test()
-
-
+#    test()
+    test_info()

@@ -23,6 +23,10 @@ def parse_user_profile(html, weibo_user_type=1001):
     soup = BeautifulSoup(html)
     user_info = storage.UserInfo()
     #domain
+
+    if "identity_img" in html:
+        user_info.weibo_user_type = 1002
+        weibo_user_type = 1002
     regex = re.compile("\$CONFIG\['domain']='[0-9]+';")
     m = regex.search(html)
     if m is not None:
@@ -123,7 +127,12 @@ def parse_user_profile(html, weibo_user_type=1001):
                         if tags is not None:
                             for a in tags.findAll('a'):
                                 user_info.tags.append(a.text.strip())
+
+
                     i += 2
+    if user_info.nickname is None:
+        nickname = re.findall('onick\'.+\'(.+)\';',str(soup))[0]
+        user_info.nickname = nickname
     return user_info
 
 def parse_follow(html):

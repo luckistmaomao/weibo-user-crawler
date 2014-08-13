@@ -14,6 +14,8 @@ import threading
 import random
 
 class WaitCrawlUserListManager(threading.Thread):
+    """
+    """
     def __init__(self,wait_user_queue):
         threading.Thread.__init__(self)
         self.weibo_user_set = self.get_weibo_user_set()

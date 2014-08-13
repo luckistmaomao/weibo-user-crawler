@@ -1,6 +1,6 @@
 """
 @author yuzt
-created at 2014.8.10
+created on 2014.8.10
 """
 
 import time
@@ -8,6 +8,8 @@ from Queue import Queue
 from time import ctime,sleep
 import threading
 from task import crawl_one
+import traceback
+
 
 class Threadpool(object):
     def __init__(self,max_workers,func,user_list = []):
@@ -46,9 +48,12 @@ class WorkerThread(threading.Thread):
 
             args = []
             args.append(uid)
-            print '-starting', self.name, 'at:', ctime()
-            apply(self.func,args )
-            print self.name, 'finished at:', ctime()
+            print '-starting at:', ctime()
+            try:
+                apply(self.func,args )
+            except:
+                print traceback.format_exc()
+            print '-finished at:', ctime()
 
 def do_something(num):
     sleep(1)

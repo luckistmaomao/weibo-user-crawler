@@ -231,7 +231,7 @@ def crawl_one(uid, weibo_user_type=1001):
     `uid`: the user's uid
     `weibo_user_type`: normal user(1001) or media user(1002)
     '''
-    event_logger.info("start uid: %s" % uid)
+    event_logger.info("Crawl_one start uid: %s" % uid)
 
     info = get_info(uid, weibo_user_type)
 
@@ -266,7 +266,7 @@ def create_time(t):
     return t.created_time
 
 def add_crawl(uid,weibo_user_type=1001):
-    event_logger.info("add crawl start uid: %s" % uid)
+    event_logger.info("Add crawl start uid: %s" % uid)
     
     last_update_time = storage.WeiboUser.objects(uid=uid)[0].last_update_time
     if last_update_time is None:
@@ -314,7 +314,7 @@ def add_crawl(uid,weibo_user_type=1001):
                     if mblog.created_time <= last_update_time:
                         if new_last_update_time > last_update_time:
                             storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time,set__info=info)
-                        print "new_mblog_count = %s" % (new_mblog_count,)
+                        log.info("MicroBlogs fetched - uid: %s - new microblog count: %d" % (uid, new_mblog_count))
                         return
                     if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
                         mblog.save()
@@ -365,6 +365,7 @@ def add_crawl(uid,weibo_user_type=1001):
 
                     for mblog in ajax_mblogs:
                         if mblog.created_time <= last_update_time:
+                            log.info("MicroBlogs fetched - uid: %s - new microblog count: %d" % (uid, new_mblog_count))
                             return
                         if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
                             if new_last_update_time > last_update_time:
@@ -418,10 +419,10 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '2682532533'
-    crawl_one(uid)
-#    add_crawl(uid)
+    uid = '1401527553'
+#    crawl_one(uid)
+    add_crawl(uid)
 
 if __name__ == '__main__':
-#    test()
-    test_info()
+    test()
+#    test_info()

@@ -258,7 +258,11 @@ def crawl_one(uid, weibo_user_type=1001):
 
     event_logger.info("MicroBlogs fetched - uid: %s - target amount: %d - realized amount: %d)" % (uid, info.n_mblogs, total_mblogs))
     event_logger.info("Finish uid: %s" % uid)
-    
+
+
+def create_time(t):
+    return t.created_time
+
 def add_crawl(uid,weibo_user_type=1001):
     event_logger.info("add crawl start uid: %s" % uid)
     
@@ -267,6 +271,7 @@ def add_crawl(uid,weibo_user_type=1001):
         last_update_time = datetime.datetime(1,1,1)
     info = get_info(uid)
     mblog_count = 0
+    new_mblog_count = 0
     n_mblogs = info.n_mblogs
     domain = info.domain
     if login(USERNAME, PASSWORD, COOKIE_FILE):
@@ -286,6 +291,8 @@ def add_crawl(uid,weibo_user_type=1001):
             for o_o in range(MAXTIMES2TRY):
                 try:
                     html = urlfetch(url)
+                    with open('data/'+ uid + '.html' ,'w') as f:
+                        f.write(html)
                 except URLError:
                     log.error("URLError! - url: %s" % url)
                     time.sleep(randint(1, MAXSLEEPINGTIME))
@@ -293,6 +300,8 @@ def add_crawl(uid,weibo_user_type=1001):
                 else:
                     try:
                         mblogs = parse_mblog(html, uid)
+                        if page == 1:
+                            mblogs = sorted(mblogs,key=create_time,reverse=True)
                     except UnsuspectedPageStructError:
                         log.error("Unsuspected page structure! - url: %s" % url)
                     break
@@ -303,9 +312,11 @@ def add_crawl(uid,weibo_user_type=1001):
                     if mblog.created_time <= last_update_time:
                         if new_last_update_time > last_update_time:
                             storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time,set__info=info)
+                        print "new_mblog_count = %s" % (new_mblog_count,)
                         return
                     if len(storage.MicroBlog.objects(mid=mblog.mid)) < 1:
                         mblog.save()
+                        new_mblog_count += 1
                     count_on_this_page += 1
                 #load ajax data
                 params = dict()
@@ -357,6 +368,7 @@ def add_crawl(uid,weibo_user_type=1001):
                             if new_last_update_time > last_update_time:
                                 storage.WeiboUser.objects(uid=uid).update(set__last_update_time=new_last_update_time,set__info=info)
                             mblog.save()
+                            new_mblog_count+=1
                         count_on_this_page += 1
                 log.info("MicroBlogs fetched - uid: %s - page: %d - count: %d" % (uid, page, count_on_this_page))
             else:
@@ -399,7 +411,7 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '2887339314'
+    uid = '1401527553'
 #    time_a = datetime.datetime(1,1,1)
 #    crawl_one(uid)
     add_crawl(uid)

@@ -421,7 +421,7 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '2214800980'
+    uid = '3520635535'
 #    last_update_time = datetime.datetime(2014,8,10)
 #    storage.WeiboUser.objects(uid=uid).update(set__last_update_time=last_update_time)
 #    crawl_one(uid)

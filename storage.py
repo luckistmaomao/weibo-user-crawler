@@ -36,6 +36,7 @@ class OriMBlog(EmbeddedDocument):
     uid = StringField()
     mid = StringField()
     content = StringField()
+    faces = ListField(StringField())
 
 
 class MicroBlog(Document):
@@ -54,6 +55,8 @@ class MicroBlog(Document):
     forwards = ListField(EmbeddedDocumentField(ForwardOrComment))
     n_comments = IntField()
     comments = ListField(EmbeddedDocumentField(ForwardOrComment))
+    
+    faces = ListField(StringField())
 
 
 class EduInfo(EmbeddedDocument):

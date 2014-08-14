@@ -220,6 +220,8 @@ def _get_mblogs(html, uid):
             mblog.mid = mbdiv['mid']
             mblog.uid = uid
             mblog.content = mbdiv.find('div', attrs={'class': 'WB_text'}).text.strip()
+            faces = [img.get('title')[1:-1] for img in mbdiv.find('div', attrs={'class': 'WB_text'}).findAll('img',attrs={'type':'face'})]
+            mblog.faces = faces
         
             created_time = mbdiv.findAll('a', attrs={'class': 'S_link2 WB_time'})[-1]['title']
             date, time = created_time.split()
@@ -272,6 +274,8 @@ def _get_mblogs(html, uid):
                     ori_mblog.uid = oriuid
                     ori_mblog.mid = mbdiv.get('omid')
                     ori_mblog.content = mbdiv.findAll('div', attrs={'class': 'WB_text'})[-1].text.strip()
+                    faces = [img.get('title')[1:-1] for img in mbdiv.findAll('div', attrs={'class': 'WB_text'})[-1].findAll('img',attrs={'type':'face'})]
+                    ori_mblog.faces = faces
                 mblog.ori_mblog = ori_mblog
             else:
                 mblog.is_forward = False

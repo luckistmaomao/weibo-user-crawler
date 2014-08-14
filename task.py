@@ -14,7 +14,7 @@ from opener import urlfetch
 from errors import UnsuspectedPageStructError, JsonDataParsingError
 from logger import Logger
 from errors import UnsuspectedPageStructError, JsonDataParsingError, URLError
-
+import traceback
 import storage
 
 import time
@@ -256,7 +256,9 @@ def crawl_one(uid, weibo_user_type=1001):
     try:
         user.save()
     except Exception, e:
+        s = traceback.format_exc()
         event_logger.error("Mongo Error")
+        event_logger.error(s)
 
     event_logger.info("MicroBlogs fetched - uid: %s - target amount: %d - realized amount: %d)" % (uid, info.n_mblogs, total_mblogs))
     event_logger.info("Finish uid: %s" % uid)
@@ -419,7 +421,9 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '1401527553'
+    uid = '2214800980'
+#    last_update_time = datetime.datetime(2014,8,10)
+#    storage.WeiboUser.objects(uid=uid).update(set__last_update_time=last_update_time)
 #    crawl_one(uid)
     add_crawl(uid)
 

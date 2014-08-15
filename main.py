@@ -20,6 +20,7 @@ except ImportError:
 
 class WaitCrawlUserListManager(threading.Thread):
     """
+    维护等待完整爬取的用户队列
     """
     def __init__(self,wait_user_queue):
         threading.Thread.__init__(self)
@@ -44,6 +45,9 @@ class WaitCrawlUserListManager(threading.Thread):
 
 
 class WeiboUserListManager(threading.Thread):
+    """
+    维护增量爬取的用户队列
+    """
     def __init__(self,weibo_user_queue):
         threading.Thread.__init__(self)
         self.weibo_user_queue = weibo_user_queue
@@ -53,13 +57,13 @@ class WeiboUserListManager(threading.Thread):
             for weibo_user in WeiboUser.objects:
                 uid = weibo_user.uid
                 self.weibo_user_queue.put(uid)
-                sleep_time = random.randint(20,30) 
+                sleep_time = random.randint(10,20) 
                 time.sleep(sleep_time)
 
 
 def main():
     wait_pool = Threadpool(5,crawl_one)
-    add_pool = Threadpool(3,add_crawl) 
+    add_pool = Threadpool(5,add_crawl) 
     wait_crawl_user_list_manager = WaitCrawlUserListManager(wait_pool.user_queue)
     wait_crawl_user_list_manager.start()
     

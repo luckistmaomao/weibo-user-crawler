@@ -434,5 +434,5 @@ def test():
 #    add_crawl(uid)
 
 if __name__ == '__main__':
-    test()
-#    test_info()
+#    test()
+    test_info()

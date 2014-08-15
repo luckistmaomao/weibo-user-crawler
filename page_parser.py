@@ -9,10 +9,11 @@ from datetime import datetime
 import re
 import json
 import traceback
+
 try:
-import storage
-from errors import UnsuspectedPageStructError, JsonDataParsingError
-from bs4 import BeautifulSoup
+    import storage
+    from errors import UnsuspectedPageStructError, JsonDataParsingError
+    from bs4 import BeautifulSoup
 except ImportError:
     s = traceback.format_exc()
     print s

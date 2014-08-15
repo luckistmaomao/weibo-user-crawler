@@ -4,14 +4,19 @@
 created on 2014.8.8
 """
 
-import storage
-from storage import WeiboUser,WaitCrawlUser,MicroBlog
-from task import crawl_one,add_crawl
 import Queue
-from multithreads import Threadpool
 import time
 import threading
 import random
+import traceback
+try:
+    import storage
+    from storage import WeiboUser,WaitCrawlUser,MicroBlog
+    from task import crawl_one,add_crawl
+    from multithreads import Threadpool
+except ImportError:
+    s = traceback.format_exc()
+    print s
 
 class WaitCrawlUserListManager(threading.Thread):
     """

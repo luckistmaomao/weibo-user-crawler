@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 '''
+modified by @yuzt on 2014.8.14
 @author Jiajun Huang
 created on 2013/10/19
 '''
 
-import storage
-from errors import UnsuspectedPageStructError, JsonDataParsingError
-
-from bs4 import BeautifulSoup
 from datetime import datetime
 import re
 import json
+import traceback
+try:
+import storage
+from errors import UnsuspectedPageStructError, JsonDataParsingError
+from bs4 import BeautifulSoup
+except ImportError:
+    s = traceback.format_exc()
+    print s
 
 def parse_user_profile(html, weibo_user_type=1001):
     '''
@@ -64,6 +69,7 @@ def parse_user_profile(html, weibo_user_type=1001):
                         user_info.n_followers = int(td_S_lines1[1].a.strong.text.strip())
                         user_info.n_mblogs = int(td_S_lines1[2].a.strong.text.strip())
                     except Exception, e:
+                        print traceback.format_exc()
                         raise UnsuspectedPageStructError
             #other information
             pf_items = inner_soup.findAll('div',  attrs={'class': 'pf_item clearfix'})

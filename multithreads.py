@@ -7,9 +7,20 @@ import time
 from Queue import Queue
 from time import ctime,sleep
 import threading
-from task import crawl_one
+import os
 import traceback
 
+try:
+    from task import crawl_one
+    from logger import Logger
+except ImportError:
+    s = traceback.format_exc()
+    print s
+
+
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+error_logger = Logger("logs/errors.log","ErrorLogger").getlog()
 
 class Threadpool(object):
     def __init__(self,max_workers,func,user_list = []):
@@ -52,7 +63,10 @@ class WorkerThread(threading.Thread):
             try:
                 apply(self.func,args )
             except:
-                print traceback.format_exc()
+                s = traceback.format_exc()
+                error_logger.error("error uid %s" % (uid,))
+                error_logger.error(s)
+                print s
             print '-finished at:', ctime()
 
 def do_something(num):

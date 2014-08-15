@@ -3,13 +3,18 @@
     #author: Jiajun Huang
     created on 2013/10/13
 '''
-
-from mongoengine import Document, EmbeddedDocument, \
-        StringField, DateTimeField, EmailField, \
-        BooleanField, URLField, IntField, FloatField, \
-        ListField, EmbeddedDocumentField
-from conf import DBNAME, DBHOST, DBPORT
-import mongoengine
+import traceback
+try:
+    from mongoengine import Document, EmbeddedDocument, \
+            StringField, DateTimeField, EmailField, \
+            BooleanField, URLField, IntField, FloatField, \
+            ListField, EmbeddedDocumentField
+    from conf import DBNAME, DBHOST, DBPORT
+    import mongoengine
+except ImportError:
+    s = traceback.format_exc()
+    print s
+    
 
 #connent mongodb with dbname
 mongoengine.connect(DBNAME, host=DBHOST, port=DBPORT)

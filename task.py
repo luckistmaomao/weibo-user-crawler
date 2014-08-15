@@ -5,18 +5,7 @@ modified by @yuzt on 2014.8.13
 @author Jiajun Huang
 created on 2013/10/24
 '''
-
-from weibo_login import login
-from conf import USERNAME, PASSWORD, COOKIE_FILE
-from page_parser import parse_user_profile, parse_follow, parse_mblog,\
-         parse_json
-from opener import urlfetch
-from errors import UnsuspectedPageStructError, JsonDataParsingError
-from logger import Logger
-from errors import UnsuspectedPageStructError, JsonDataParsingError, URLError
 import traceback
-import storage
-
 import time
 import urllib
 import urllib2
@@ -24,13 +13,30 @@ import json
 import os
 from random import randint
 import datetime
+
+try:
+    from weibo_login import login
+    from conf import USERNAME, PASSWORD, COOKIE_FILE
+    from page_parser import parse_user_profile, parse_follow, parse_mblog,\
+             parse_json
+    from opener import urlfetch
+    from errors import UnsuspectedPageStructError, JsonDataParsingError
+    from logger import Logger
+    from errors import UnsuspectedPageStructError, JsonDataParsingError, URLError
+    import storage
+except ImportError:
+    s = traceback.format_exc()
+    print s
+
 MAXTIMES2TRY = 3
 MAXSLEEPINGTIME = 20
 
+#log support
 if not os.path.exists('logs'):
     os.mkdir('logs')
 log = Logger("logs/routine.log", "RoutineLogger").getlog()
 event_logger = Logger("logs/events.log", "EventLogger").getlog()
+error_logger = Logger("logs/errors.log","ErrorLogger").getlog()
 
 def get_info(uid, weibo_user_type=1001):
     '''
@@ -257,8 +263,8 @@ def crawl_one(uid, weibo_user_type=1001):
         user.save()
     except Exception, e:
         s = traceback.format_exc()
-        event_logger.error("Mongo Error")
-        event_logger.error(s)
+        error_logger.error("Mongo Error wit uid:%s" % (uid,))
+        error_logger.error(s)
 
     event_logger.info("MicroBlogs fetched - uid: %s - target amount: %d - realized amount: %d)" % (uid, info.n_mblogs, total_mblogs))
     event_logger.info("Finish uid: %s" % uid)
@@ -421,11 +427,11 @@ def test_mblog():
     print total_mblogs
 
 def test():
-    uid = '3520635535'
+    uid = '2769186257'
 #    last_update_time = datetime.datetime(2014,8,10)
 #    storage.WeiboUser.objects(uid=uid).update(set__last_update_time=last_update_time)
-#    crawl_one(uid)
-    add_crawl(uid)
+    crawl_one(uid)
+#    add_crawl(uid)
 
 if __name__ == '__main__':
     test()
